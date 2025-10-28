@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | QR Attendance</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    body { font-family: Arial; background: #f5f7fa; margin: 0; padding: 0; }
+    header { background: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    header h2 { margin: 0; }
+    header button { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+    main { padding: 20px; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+    th { background: #007bff; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    #qrcode { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>📊 Admin Dashboard</h2>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <main>
+    <h3>Generate Event QR Code</h3>
+    <input type="text" id="eventName" placeholder="Enter Event Name (e.g. Orientation2025)">
+    <button onclick="generateQR()">Generate QR</button>
+    <div id="qrcode"></div>
+    <div id="eventLink"></div>
+
+    <h3 style="margin-top:40px;">Student Attendance Records</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Full Name</th>
+          <th>Department</th>
+          <th>Year & Section</th>
+          <th>Event</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </main>
+
+  <script>
+    if(!localStorage.getItem("loggedInUser")) {
+      alert("Please log in first!");
+      window.location.href = "login.html";
+    }
+
+    function generateQR() {
+      const eventName = document.getElementById("eventName").value.trim();
+      if (!eventName) return alert("Enter event name first!");
+      const fullURL = window.location.origin + window.location.pathname.replace("dashboard.html", "attendance.html?event=") + encodeURIComponent(eventName);
+      document.getElementById("qrcode").innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), fullURL);
+      document.getElementById("eventLink").innerHTML = `<a href="${fullURL}" target="_blank">${fullURL}</a>`;
+    }
+
+    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+    const tableBody = document.getElementById("tableBody");
+    records.forEach(r => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${r.studentId}</td>
+        <td>${r.fullName}</td>
+        <td>${r.department}</td>
+        <td>${r.yearSection}</td>
+        <td>${r.event}</td>
+        <td>${r.timestamp}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    logoutBtn.onclick = () => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    };
+  </script>
+</body>
+</html>
+
