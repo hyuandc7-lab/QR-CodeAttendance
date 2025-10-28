@@ -48,40 +48,68 @@
   </main>
 
   <script>
-    if(!localStorage.getItem("loggedInUser")) {
-      alert("Please log in first!");
-      window.location.href = "login.html";
+  // ✅ Protect dashboard
+  if (!localStorage.getItem("loggedInUser")) {
+    alert("Please log in first!");
+    window.location.href = "login.html";
+  }
+
+  // 🔗 Google Apps Script Web App URL
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzSCPo66z0e2Azb90luVcEp7jX37wLajgm4rqWKwchVSHRvlxVHyzFB8grLjJUFrx2_/exec";  // ← replace with your own
+
+  // 🧾 Generate QR Code
+  function generateQR() {
+    const eventName = document.getElementById("eventName").value.trim();
+    if (!eventName) return alert("Enter event name first!");
+    const fullURL =
+      window.location.origin +
+      window.location.pathname.replace("dashboard.html", "attendance.html?event=") +
+      encodeURIComponent(eventName);
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), fullURL);
+    document.getElementById("eventLink").innerHTML =
+      `<a href="${fullURL}" target="_blank">${fullURL}</a>`;
+  }
+
+  // 📡 Fetch attendance records from Google Sheets
+  async function loadData() {
+    try {
+      const response = await fetch(scriptURL);
+      const data = await response.json();
+      const tableBody = document.getElementById("tableBody");
+      tableBody.innerHTML = "";
+
+      if (data.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="color:gray;">No records yet</td></tr>`;
+        return;
+      }
+
+      data.forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${r.studentId}</td>
+          <td>${r.fullName}</td>
+          <td>${r.department}</td>
+          <td>${r.yearSection}</td>
+          <td>${r.event}</td>
+          <td>${r.timestamp}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } catch (err) {
+      console.error("Error fetching data:", err);
     }
+  }
 
-    function generateQR() {
-      const eventName = document.getElementById("eventName").value.trim();
-      if (!eventName) return alert("Enter event name first!");
-      const fullURL = window.location.origin + window.location.pathname.replace("dashboard.html", "attendance.html?event=") + encodeURIComponent(eventName);
-      document.getElementById("qrcode").innerHTML = "";
-      new QRCode(document.getElementById("qrcode"), fullURL);
-      document.getElementById("eventLink").innerHTML = `<a href="${fullURL}" target="_blank">${fullURL}</a>`;
-    }
+  // 🚪 Logout
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  };
 
-    const records = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
-    const tableBody = document.getElementById("tableBody");
-    records.forEach(r => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${r.studentId}</td>
-        <td>${r.fullName}</td>
-        <td>${r.department}</td>
-        <td>${r.yearSection}</td>
-        <td>${r.event}</td>
-        <td>${r.timestamp}</td>
-      `;
-      tableBody.appendChild(row);
-    });
+  // 🔁 Auto-refresh every 10 seconds
+  loadData();
+  setInterval(loadData, 10000);
+</script>
 
-    logoutBtn.onclick = () => {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "login.html";
-    };
-  </script>
-</body>
-</html>
 
