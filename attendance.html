@@ -42,9 +42,17 @@
         event: eventName,
         timestamp: new Date().toLocaleString()
       };
-      let allRecords = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
-      allRecords.push(record);
-      localStorage.setItem("attendanceRecords", JSON.stringify(allRecords));
+     // Send data to Google Sheets online
+fetch(https:https://script.google.com/macros/s/AKfycbzSCPo66z0e2Azb90luVcEp7jX37wLajgm4rqWKwchVSHRvlxVHyzFB8grLjJUFrx2_/exec, {
+  method: "POST",
+  mode: "no-cors",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(record)
+});
+
+alert("✅ Attendance submitted successfully!");
+attendanceForm.reset();
+confirmationMsg.style.display = "block";
 
       attendanceForm.reset();
       confirmationMsg.style.display = "block";
@@ -52,3 +60,4 @@
   </script>
 </body>
 </html>
+
